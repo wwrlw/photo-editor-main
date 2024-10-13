@@ -1,2 +1,5 @@
 Деплой:
-https://images-orpin-omega.vercel.app
+http://photo-editor.std-2190.ist.mospolytech.ru/
+
+npm run dev - запуск проекта
+npm run build - сборка приложения
