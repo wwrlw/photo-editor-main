@@ -64,6 +64,7 @@ export function rgbToLab(rgb: [number, number, number]) {
   const b = Math.round(200 * (y - z))
 
   return [l, a, b]
+
 }
 
 function rgbToContrastPrepare (color: [number, number, number]) {

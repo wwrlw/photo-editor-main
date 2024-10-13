@@ -56,15 +56,15 @@ const CurvesModal = ({
     const colorsHistData = getColorsHistData();
     buildColorRows(colorsHistData);
 
-    ctx.beginPath();
-
-    // Рисование базовой прямой линии (по умолчанию)
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = "blue";
-    ctx.moveTo(0, 255);
-    ctx.lineTo(255, 0);
-    ctx.closePath();
-    ctx.stroke();
+    // ctx.beginPath();
+    //
+    // // Рисование базовой прямой линии (по умолчанию)
+    // ctx.lineWidth = 3;
+    // ctx.strokeStyle = "blue";
+    // ctx.moveTo(0, 255);
+    // ctx.lineTo(255, 0);
+    // ctx.closePath();
+    // ctx.stroke();
 
     // Рисование кривой на основе точек входа/выхода
     ctx.strokeStyle = "black";
@@ -72,9 +72,9 @@ const CurvesModal = ({
     ctx.beginPath();
     ctx.moveTo(0, 255 - curvePoints.enter.out);
     ctx.lineTo(curvePoints.enter.in, 255 - curvePoints.enter.out);
-    ctx.arc(curvePoints.enter.in, 255 - curvePoints.enter.out, 5, 0, 2 * Math.PI);
+    // ctx.arc(curvePoints.enter.in, 255 - curvePoints.enter.out, 5, 0, 2 * Math.PI);
     ctx.lineTo(curvePoints.exit.in, 255 - curvePoints.exit.out);
-    ctx.arc(curvePoints.exit.in, 255 - curvePoints.exit.out, 5, 0, 2 * Math.PI);
+    // ctx.arc(curvePoints.exit.in, 255 - curvePoints.exit.out, 5, 0, 2 * Math.PI);
     ctx.lineTo(255, 255 - curvePoints.exit.out);
     ctx.stroke();
 
@@ -114,17 +114,24 @@ const CurvesModal = ({
       "g": new Map(),
       "b": new Map(),
     };
+    // Функция для построения гистограммы по каналам RGB
     for (let i = 0; i < srcData.length; i += 4) {
+      // Увеличение счетчика для канала R, если значение уже есть в карте
       if (colorsHistData["r"].has(srcData[i])) {
         colorsHistData["r"].set(srcData[i], colorsHistData["r"].get(srcData[i])! + 1);
       } else {
+        // Инициализация значения для канала R, если его нет
         colorsHistData["r"].set(srcData[i], 0);
       }
+
+      // Аналогично для канала G
       if (colorsHistData["g"].has(srcData[i + 1])) {
         colorsHistData["g"].set(srcData[i + 1], colorsHistData["g"].get(srcData[i + 1])! + 1);
       } else {
         colorsHistData["g"].set(srcData[i + 1], 0);
       }
+
+      // Аналогично для канала B
       if (colorsHistData["b"].has(srcData[i + 2])) {
         colorsHistData["b"].set(srcData[i + 2], colorsHistData["b"].get(srcData[i + 2])! + 1);
       } else {
@@ -134,51 +141,64 @@ const CurvesModal = ({
     return colorsHistData;
   }
 
+// Функция для построения столбцов по каждому цвету RGB
   const buildRGBColorRows = (data: ColorRowsI, color: "r" | "g" | "b") => {
     const [canvas, ctx] = getCanvasNCtx(histRef);
-    const maxVal = Math.max(...data["r"].values(), ...data["g"].values(), ...data["b"].values());
-    if (color === "r") {
-      ctx.fillStyle = 'rgba(255, 0, 0, 0.65)';
-    } else if (color === "g") {
-      ctx.fillStyle = 'rgba(0, 255, 0, 0.65)';
-    } else {
-      ctx.fillStyle = 'rgba(0, 0, 255, 0.65)';
-    }
-    for (let i of [...data[color].keys()].sort()) {
 
-      const h = Math.floor(data[color].get(i)! * 256 / maxVal);
-      ctx.fillRect(i, canvas.height, 1, -h);
+    // Находим максимальное значение гистограммы среди всех каналов
+    const maxVal = Math.max(...data["r"].values(), ...data["g"].values(), ...data["b"].values());
+
+    // Задаем цвет для канала
+    if (color === "r") {
+      ctx.fillStyle = 'rgba(255, 0, 0, 0.65)'; // Красный цвет для канала R
+    } else if (color === "g") {
+      ctx.fillStyle = 'rgba(0, 255, 0, 0.65)'; // Зеленый цвет для канала G
+    } else {
+      ctx.fillStyle = 'rgba(0, 0, 255, 0.65)'; // Синий цвет для канала B
+    }
+
+    // Рисуем столбцы гистограммы для каждого цвета
+    for (let i of [...data[color].keys()].sort()) {
+      const h = Math.floor(data[color].get(i)! * 256 / maxVal); // Высота столбца
+      ctx.fillRect(i, canvas.height, 1, -h); // Рисуем столбец на канвасе
     }
   };
 
+// Функция для отображения всех каналов RGB на канвасе
   const buildColorRows = (data: ColorRowsI) => {
     const [canvas, ctx] = getCanvasNCtx(histRef);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    buildRGBColorRows(data, "r");
-    buildRGBColorRows(data, "g");
-    buildRGBColorRows(data, "b");
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // Очищаем канвас
+    buildRGBColorRows(data, "r"); // Строим красный канал
+    buildRGBColorRows(data, "g"); // Строим зеленый канал
+    buildRGBColorRows(data, "b"); // Строим синий канал
   };
 
+// Функция изменения кривых для точки входа и выхода по каждому цвету
   const changeCurvePoints = (
-    e: React.KeyboardEvent<HTMLInputElement>,
-    point: "enter" | "exit",
-    pointParam: "in" | "out"
+      e: React.KeyboardEvent<HTMLInputElement>,
+      point: "enter" | "exit",
+      pointParam: "in" | "out"
   ) => {
+    // Проверка для значения входа (enter)
     if (point === "enter" && pointParam === "in") {
       if (parseInt((e.target as HTMLInputElement).value) > curvePoints.exit.in) return;
     }
+    // Проверка для значения выхода (exit)
     if (point === "exit" && pointParam === "in") {
       if (parseInt((e.target as HTMLInputElement).value) < curvePoints.enter.in) return;
     }
+
+    // Обновляем точки кривых
     setCurvePoints({
       ...curvePoints,
       [point]: {
         ...curvePoints[point],
         [pointParam]: parseInt((e.target as HTMLInputElement).value)
       }
-    })
-  }
+    });
+  };
 
+// Функция для сброса значений кривых к исходным
   const resetCurvePoints = () => {
     setCurvePoints({
       enter: {
@@ -189,43 +209,49 @@ const CurvesModal = ({
         in: 255,
         out: 255,
       }
-    })
-  }
+    });
+  };
 
+// Получение данных изображения с применением гамма-коррекции
   const getTempImageData = () => {
     const [canvas, ctx] = getCanvasNCtx(imageRef);
     const srcImageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
     const newImageData = new Uint8ClampedArray(canvas.width * canvas.height * 4);
 
+    // Рассчитываем коэффициенты для прямой между двумя точками кривой (enter и exit)
     const x1 = curvePoints.enter.in;
     const y1 = curvePoints.enter.out;
     const x2 = curvePoints.exit.in;
     const y2 = curvePoints.exit.out;
 
-    const a = (y2 - y1) / (x2 - x1);
-    const b = y1 - a * x1;
+    const a = (y2 - y1) / (x2 - x1); // Наклон прямой
+    const b = y1 - a * x1; // Смещение
 
+    // Функция для коррекции каждого пикселя по гамме
     const changePixelGammaCorrection = (i: number) => {
       if (srcImageData[i] <= x1) {
-        newImageData[i] = y1;
+        newImageData[i] = y1; // Если значение меньше минимального, применяем минимальное
       } else if (srcImageData[i] >= x2) {
-        newImageData[i] = y2;
+        newImageData[i] = y2; // Если значение больше максимального, применяем максимальное
       } else {
-        newImageData[i] = a * srcImageData[i] + b;
+        newImageData[i] = a * srcImageData[i] + b; // Применяем гамма-коррекцию
       }
     };
 
+    // Проходим по каждому пикселю и корректируем значения для R, G, B каналов
     for (let i = 0; i < newImageData.length; i += 4) {
-      changePixelGammaCorrection(i);
-      changePixelGammaCorrection(i + 1);
-      changePixelGammaCorrection(i + 2);
-      newImageData[i + 3] = srcImageData[i + 3];
+      changePixelGammaCorrection(i); // R канал
+      changePixelGammaCorrection(i + 1); // G канал
+      changePixelGammaCorrection(i + 2); // B канал
+      newImageData[i + 3] = srcImageData[i + 3]; // Альфа-канал (прозрачность) остается без изменений
     }
 
+    // Возвращаем скорректированные данные изображения
     const tempImageData = new ImageData(newImageData, canvas.width, canvas.height);
     return tempImageData;
-  }
+  };
 
+// Функция для применения гамма-коррекции и отображения результата
   const changeGammaCorrection = () => {
     const [canvas, _] = getCanvasNCtx(imageRef);
     const [tempCanvas, tempCtx] = getCanvasNCtx(previewRef);
@@ -234,9 +260,10 @@ const CurvesModal = ({
     tempCanvas.height = canvas.height;
 
     const tempImageData = getTempImageData();
-    tempCtx?.putImageData(tempImageData, 0, 0);
-    onGammaCorrectionChange(tempCanvas.toDataURL());
-  }
+    tempCtx?.putImageData(tempImageData, 0, 0); // Отображаем данные на временном канвасе
+    onGammaCorrectionChange(tempCanvas.toDataURL()); // Отправляем данные для отображения в режиме предпросмотра
+  };
+
 
   return (
     <div className='curves-modal'>
